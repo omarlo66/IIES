@@ -16,7 +16,190 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModal();
     initializeForm();
     animateStats();
+    initializeHelicopterFlights();
 });
+
+// Helicopter Flight System
+function initializeHelicopterFlights() {
+    const helicopter = document.querySelector('.fixed-scroll');
+    let scrollTimeout;
+    let clickTimeout;
+    let isUserInteracting = false;
+    let helicopterTrails = [];
+    
+    // Create helicopter trail effect
+    function createTrail(x, y) {
+        const trail = document.createElement('div');
+        trail.className = 'helicopter-trail';
+        trail.innerHTML = '<i class="fas fa-helicopter"></i>';
+        trail.style.right = x + 'px';
+        trail.style.bottom = y + 'px';
+        document.body.appendChild(trail);
+        
+        helicopterTrails.push(trail);
+        
+        // Remove trail after animation
+        setTimeout(() => {
+            if (trail.parentNode) {
+                trail.parentNode.removeChild(trail);
+            }
+            helicopterTrails = helicopterTrails.filter(t => t !== trail);
+        }, 2000);
+    }
+
+    // Scroll interaction
+    let lastScrollY = window.scrollY;
+    let scrollDirection = 'down';
+    
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+        lastScrollY = currentScrollY;
+        
+        if (!isUserInteracting) {
+            isUserInteracting = true;
+            helicopter.className = 'fixed-scroll scroll-mode';
+            
+            // Create trail during scroll
+            const rect = helicopter.getBoundingClientRect();
+            createTrail(
+                window.innerWidth - rect.right, 
+                window.innerHeight - rect.bottom
+            );
+        }
+        
+        // Change helicopter direction based on scroll
+        if (scrollDirection === 'up') {
+            helicopter.style.transform += ' scaleX(-1)';
+        } else {
+            helicopter.style.transform = helicopter.style.transform.replace('scaleX(-1)', '');
+        }
+        
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            isUserInteracting = false;
+            helicopter.className = 'fixed-scroll flying';
+            helicopter.style.transform = '';
+        }, 1500);
+    });
+
+    // Click interactions
+    document.addEventListener('click', (e) => {
+        if (!isUserInteracting) {
+            isUserInteracting = true;
+            helicopter.className = 'fixed-scroll click-mode';
+            
+            // Create multiple trails on click
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const rect = helicopter.getBoundingClientRect();
+                    createTrail(
+                        window.innerWidth - rect.right + (i * 20), 
+                        window.innerHeight - rect.bottom + (i * 10)
+                    );
+                }, i * 200);
+            }
+        }
+        
+        clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(() => {
+            isUserInteracting = false;
+            helicopter.className = 'fixed-scroll flying';
+        }, 2000);
+    });
+
+    // Mouse hover interaction
+    document.addEventListener('mouseenter', (e) => {
+        if (e.target.closest('.service-card, .btn, .nav-link')) {
+            helicopter.className = 'fixed-scroll hover-mode';
+            
+            setTimeout(() => {
+                if (!isUserInteracting) {
+                    helicopter.className = 'fixed-scroll flying';
+                }
+            }, 3000);
+        }
+    });
+
+    // Form submission helicopter celebration
+    document.getElementById('contact-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Helicopter celebration animation
+        helicopter.className = 'fixed-scroll';
+        helicopter.style.animation = 'helicopterCelebration 3s ease-in-out';
+        
+        // Create celebration trails
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                createTrail(
+                    Math.random() * window.innerWidth,
+                    Math.random() * window.innerHeight
+                );
+            }, i * 300);
+        }
+        
+        setTimeout(() => {
+            helicopter.className = 'fixed-scroll flying';
+            helicopter.style.animation = '';
+        }, 3000);
+    });
+
+    // Video play helicopter reaction
+    window.playVideo = function() {
+        const modal = document.getElementById('video-modal');
+        modal.style.display = 'block';
+        
+        // Helicopter gets excited when video plays
+        helicopter.className = 'fixed-scroll';
+        helicopter.style.animation = 'helicopterExcited 2s infinite ease-in-out';
+        
+        const video = modal.querySelector('video');
+        video.play();
+    };
+
+    // Reset helicopter when video closes
+    const closeBtn = document.querySelector('.close');
+    closeBtn.addEventListener('click', () => {
+        helicopter.className = 'fixed-scroll flying';
+        helicopter.style.animation = '';
+    });
+
+    // Page visibility change - helicopter reacts to focus
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            helicopter.style.opacity = '0.3';
+            helicopter.style.animation = 'helicopterSleep 4s infinite ease-in-out';
+        } else {
+            helicopter.style.opacity = '1';
+            helicopter.className = 'fixed-scroll flying';
+            helicopter.style.animation = '';
+        }
+    });
+
+    // Random helicopter appearances
+    setInterval(() => {
+        if (!isUserInteracting && Math.random() > 0.7) {
+            // Surprise helicopter flyby
+            const surpriseHelicopter = document.createElement('div');
+            surpriseHelicopter.className = 'helicopter-trail';
+            surpriseHelicopter.innerHTML = '<i class="fas fa-helicopter"></i>';
+            surpriseHelicopter.style.fontSize = '1.5rem';
+            surpriseHelicopter.style.color = 'var(--secondary-color)';
+            surpriseHelicopter.style.right = '-100px';
+            surpriseHelicopter.style.bottom = Math.random() * 60 + 20 + '%';
+            surpriseHelicopter.style.animation = 'helicopterSurprise 6s linear forwards';
+            
+            document.body.appendChild(surpriseHelicopter);
+            
+            setTimeout(() => {
+                if (surpriseHelicopter.parentNode) {
+                    surpriseHelicopter.parentNode.removeChild(surpriseHelicopter);
+                }
+            }, 6000);
+        }
+    }, 10000); // Every 10 seconds
+}
 
 // Navigation functionality
 function initializeNavigation() {
@@ -116,6 +299,11 @@ function initializeModal() {
         const video = modal.querySelector('video');
         video.pause();
         video.currentTime = 0;
+        
+        // Reset helicopter animation
+        const helicopter = document.getElementById('helicopter');
+        helicopter.className = 'fixed-scroll flying';
+        helicopter.style.animation = '';
     });
 
     window.addEventListener('click', (e) => {
@@ -124,11 +312,16 @@ function initializeModal() {
             const video = modal.querySelector('video');
             video.pause();
             video.currentTime = 0;
+            
+            // Reset helicopter animation
+            const helicopter = document.getElementById('helicopter');
+            helicopter.className = 'fixed-scroll flying';
+            helicopter.style.animation = '';
         }
     });
 }
 
-// Form handling
+// Form handling with helicopter celebration
 function initializeForm() {
     const form = document.getElementById('contact-form');
     
@@ -152,7 +345,7 @@ function initializeForm() {
             return;
         }
         
-        // Simulate form submission
+        // Trigger helicopter celebration (handled in helicopter system)
         showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
         form.reset();
     });
