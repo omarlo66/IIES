@@ -16,189 +16,151 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModal();
     initializeForm();
     animateStats();
-    initializeHelicopterFlights();
+    //initializeHelicopterFlights();
 });
 
-// Helicopter Flight System
+// Realistic Helicopter Flight System
 function initializeHelicopterFlights() {
-    const helicopter = document.querySelector('.fixed-scroll');
-    let scrollTimeout;
-    let clickTimeout;
-    let isUserInteracting = false;
-    let helicopterTrails = [];
+    const helicopter = document.getElementById('helicopter');
+    let interactionTimeout;
+    let isGentlyInteracting = false;
     
-    // Create helicopter trail effect
-    function createTrail(x, y) {
-        const trail = document.createElement('div');
-        trail.className = 'helicopter-trail';
-        trail.innerHTML = '<i class="fas fa-helicopter"></i>';
-        trail.style.right = x + 'px';
-        trail.style.bottom = y + 'px';
-        document.body.appendChild(trail);
-        
-        helicopterTrails.push(trail);
-        
-        // Remove trail after animation
-        setTimeout(() => {
-            if (trail.parentNode) {
-                trail.parentNode.removeChild(trail);
-            }
-            helicopterTrails = helicopterTrails.filter(t => t !== trail);
-        }, 2000);
-    }
-
-    // Scroll interaction
-    let lastScrollY = window.scrollY;
-    let scrollDirection = 'down';
+    if (!helicopter) return;
     
-    window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
-        scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
-        lastScrollY = currentScrollY;
-        
-        if (!isUserInteracting) {
-            isUserInteracting = true;
-            helicopter.className = 'fixed-scroll scroll-mode';
+    // Very subtle trail effect that doesn't interfere with user experience
+    function createSubtleTrail() {
+        if (Math.random() > 0.85) { // Create trails very rarely
+            const trail = document.createElement('div');
+            trail.className = 'helicopter-trail';
+            trail.innerHTML = '<i class="fas fa-helicopter"></i>';
             
-            // Create trail during scroll
             const rect = helicopter.getBoundingClientRect();
-            createTrail(
-                window.innerWidth - rect.right, 
-                window.innerHeight - rect.bottom
-            );
-        }
-        
-        // Change helicopter direction based on scroll
-        if (scrollDirection === 'up') {
-            helicopter.style.transform += ' scaleX(-1)';
-        } else {
-            helicopter.style.transform = helicopter.style.transform.replace('scaleX(-1)', '');
-        }
-        
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            isUserInteracting = false;
-            helicopter.className = 'fixed-scroll flying';
-            helicopter.style.transform = '';
-        }, 1500);
-    });
-
-    // Click interactions
-    document.addEventListener('click', (e) => {
-        if (!isUserInteracting) {
-            isUserInteracting = true;
-            helicopter.className = 'fixed-scroll click-mode';
+            // Keep trails at the bottom of the screen
+            trail.style.right = (window.innerWidth - rect.right + Math.random() * 20 - 10) + 'px';
+            trail.style.bottom = Math.max(10, window.innerHeight - rect.bottom + Math.random() * 15 - 5) + 'px';
             
-            // Create multiple trails on click
-            for (let i = 0; i < 3; i++) {
-                setTimeout(() => {
-                    const rect = helicopter.getBoundingClientRect();
-                    createTrail(
-                        window.innerWidth - rect.right + (i * 20), 
-                        window.innerHeight - rect.bottom + (i * 10)
-                    );
-                }, i * 200);
-            }
-        }
-        
-        clearTimeout(clickTimeout);
-        clickTimeout = setTimeout(() => {
-            isUserInteracting = false;
-            helicopter.className = 'fixed-scroll flying';
-        }, 2000);
-    });
-
-    // Mouse hover interaction
-    document.addEventListener('mouseenter', (e) => {
-        if (e.target.closest('.service-card, .btn, .nav-link')) {
-            helicopter.className = 'fixed-scroll hover-mode';
+            document.body.appendChild(trail);
             
+            // Remove trail after animation
             setTimeout(() => {
-                if (!isUserInteracting) {
-                    helicopter.className = 'fixed-scroll flying';
+                if (trail.parentNode) {
+                    trail.parentNode.removeChild(trail);
                 }
             }, 3000);
         }
-    });
+    }
 
-    // Form submission helicopter celebration
-    document.getElementById('contact-form').addEventListener('submit', (e) => {
-        e.preventDefault();
+    // Very subtle scroll interaction - barely noticeable
+    let lastScrollY = window.scrollY;
+    let scrollVelocity = 0;
+    
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        scrollVelocity = Math.abs(currentScrollY - lastScrollY);
+        lastScrollY = currentScrollY;
         
-        // Helicopter celebration animation
-        helicopter.className = 'fixed-scroll';
-        helicopter.style.animation = 'helicopterCelebration 3s ease-in-out';
-        
-        // Create celebration trails
-        for (let i = 0; i < 8; i++) {
-            setTimeout(() => {
-                createTrail(
-                    Math.random() * window.innerWidth,
-                    Math.random() * window.innerHeight
-                );
-            }, i * 300);
+        // Only react to fast scrolling to avoid interference
+        if (scrollVelocity > 10 && !isGentlyInteracting) {
+            isGentlyInteracting = true;
+            helicopter.classList.add('gentle-scroll');
+            
+            // Very rare trail creation during scroll
+            if (Math.random() > 0.9) {
+                createSubtleTrail();
+            }
         }
         
-        setTimeout(() => {
-            helicopter.className = 'fixed-scroll flying';
-            helicopter.style.animation = '';
-        }, 3000);
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => {
+            isGentlyInteracting = false;
+            helicopter.classList.remove('gentle-scroll');
+        }, 800); // Shorter interaction time
     });
 
-    // Video play helicopter reaction
+    // Minimal hover interactions - only for important elements
+    const interactiveElements = document.querySelectorAll('.btn-primary, .service-card');
+    
+    interactiveElements.forEach(element => {
+        element.addEventListener('mouseenter', () => {
+            if (!isGentlyInteracting) {
+                helicopter.classList.add('gentle-hover');
+            }
+        });
+        
+        element.addEventListener('mouseleave', () => {
+            helicopter.classList.remove('gentle-hover');
+        });
+    });
+
+    // Very subtle click response - only for main buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-primary')) {
+            helicopter.classList.add('interactive');
+            
+            // Rare trail on important clicks
+            if (Math.random() > 0.8) {
+                createSubtleTrail();
+            }
+            
+            setTimeout(() => {
+                helicopter.classList.remove('interactive');
+            }, 1500);
+        }
+    });
+
+    // Form submission - very gentle celebration
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Minimal celebration that doesn't distract
+            helicopter.style.animation = 'gentleFloat 1s ease-in-out 2';
+            
+            // Single celebration trail
+            setTimeout(() => {
+                createSubtleTrail();
+            }, 500);
+            
+            setTimeout(() => {
+                helicopter.style.animation = '';
+            }, 2000);
+        });
+    }
+
+    // Video modal interaction - keep it minimal
     window.playVideo = function() {
         const modal = document.getElementById('video-modal');
         modal.style.display = 'block';
         
-        // Helicopter gets excited when video plays
-        helicopter.className = 'fixed-scroll';
-        helicopter.style.animation = 'helicopterExcited 2s infinite ease-in-out';
+        // Very gentle reaction to video
+        helicopter.classList.add('interactive');
+        
+        setTimeout(() => {
+            helicopter.classList.remove('interactive');
+        }, 2000);
         
         const video = modal.querySelector('video');
         video.play();
     };
 
-    // Reset helicopter when video closes
-    const closeBtn = document.querySelector('.close');
-    closeBtn.addEventListener('click', () => {
-        helicopter.className = 'fixed-scroll flying';
-        helicopter.style.animation = '';
-    });
-
-    // Page visibility change - helicopter reacts to focus
+    // Page visibility - subtle speed adjustment
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            helicopter.style.opacity = '0.3';
-            helicopter.style.animation = 'helicopterSleep 4s infinite ease-in-out';
+            helicopter.style.opacity = '0.7';
+            helicopter.style.animationDuration = '40s'; // Much slower when page is hidden
         } else {
             helicopter.style.opacity = '1';
-            helicopter.className = 'fixed-scroll flying';
-            helicopter.style.animation = '';
+            helicopter.style.animationDuration = '30s'; // Normal speed
         }
     });
 
-    // Random helicopter appearances
+    // Very rare automatic trail creation - doesn't interfere with user
     setInterval(() => {
-        if (!isUserInteracting && Math.random() > 0.7) {
-            // Surprise helicopter flyby
-            const surpriseHelicopter = document.createElement('div');
-            surpriseHelicopter.className = 'helicopter-trail';
-            surpriseHelicopter.innerHTML = '<i class="fas fa-helicopter"></i>';
-            surpriseHelicopter.style.fontSize = '1.5rem';
-            surpriseHelicopter.style.color = 'var(--secondary-color)';
-            surpriseHelicopter.style.right = '-100px';
-            surpriseHelicopter.style.bottom = Math.random() * 60 + 20 + '%';
-            surpriseHelicopter.style.animation = 'helicopterSurprise 6s linear forwards';
-            
-            document.body.appendChild(surpriseHelicopter);
-            
-            setTimeout(() => {
-                if (surpriseHelicopter.parentNode) {
-                    surpriseHelicopter.parentNode.removeChild(surpriseHelicopter);
-                }
-            }, 6000);
+        if (!isGentlyInteracting && Math.random() > 0.95) {
+            createSubtleTrail();
         }
-    }, 10000); // Every 10 seconds
+    }, 15000); // Every 15 seconds, very rarely
 }
 
 // Navigation functionality
